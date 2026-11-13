@@ -145,3 +145,14 @@ vite.config.ts.timestamp-*
 # Local architecture notes
 arch-docs/
 **/.test-local-dist/**
+
+# Temporary KiCad edit/validation artifacts (including interrupted runs)
+.schematic-edit-*
+.*.candidate-*/
+
+# KiCad editor local state and automatic backups
+*.kicad_prl
+*.lck
+~*.kicad_sch.lck
+~*.kicad_pcb.lck
+*-backups/

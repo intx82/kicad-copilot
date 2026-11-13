@@ -104,11 +104,14 @@ export async function listCheckpoints(path: string, limit = 20, page = 1) {
     };
 }
 
-export async function saveCheckpoint(path: string, description = 'Manual checkpoint') {
+export async function saveCheckpoint(path: string, description = 'Manual checkpoint', expectedHash?: string) {
     const target = resolve(path);
     const bytes = await readFile(target).catch(() => {
         throw new Error(`path not found: ${target}`);
     });
+    if (expectedHash && createHash('sha256').update(bytes).digest('hex') !== expectedHash) {
+        throw new Error('file changed before checkpoint');
+    }
     const resolvedDescription = description.trim() || 'Manual checkpoint';
     if (resolvedDescription.length > 100) throw new Error('checkpoint description exceeds 100 characters');
     return saveCheckpointBytes(target, bytes, resolvedDescription);

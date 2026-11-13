@@ -18,6 +18,8 @@ export default defineConfig({
         'test-routing-live': 'scripts/test-routing-live.ts',
         'test-routing-integration': 'scripts/test-routing-integration.ts',
         'test-analysis': 'scripts/test-analysis.ts',
+        'test-pcb-track-edit': 'scripts/test-pcb-track-edit.ts',
+        'test-schematic-edit': 'scripts/test-schematic-edit.ts',
     },
     format: ['esm'],
     clean: true,

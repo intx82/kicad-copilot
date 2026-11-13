@@ -85,3 +85,33 @@ Use `compactness: "high"` only when board area is genuinely constrained.
 - If the result is running, call `wait_operation({ operation_id })`; use `cancel_operation` for obsolete work.
 - KiCad refills zones and runs native DRC before the candidate is applied. Diagnostics do not crash the workflow.
 - Routing success is not final sign-off: inspect the board and run `kicad-cli pcb drc` after routing.
+
+## Targeted Straight-Track Deletion
+
+Save intentional editor changes first. Call `get_pcb_tracks({ path })` to inspect exact
+straight-segment UUIDs and the SHA-256 `source_hash`. Then request approval for
+`delete_pcb_tracks({ path, uuids, expected_source_hash, dry_run: true })`; dry-run
+still runs native DRC but does not checkpoint or write the PCB. Repeat with
+`dry_run: false` only after reviewing the result and obtaining mutation approval.
+
+Only 1–100 unique, unlocked, ungrouped top-level straight segments are supported.
+Vias, arcs, absent/duplicate UUIDs and grouped/locked targets reject the entire batch.
+The operation uses the normal mutation queue, validates baseline and candidate
+with identical copied project rules and zone refill, and rejects new error findings
+or unconnected-item identities (not merely count increases). Existing errors and
+warnings are reported; they are not automatically fixed. Reports are returned inline,
+not as persistent preview/report paths. Missing/malformed reports and CLI failures
+abort without changing the source.
+
+Native save normalization outside field ordering and cached zone fills is rejected
+conservatively; upgrade the board separately if required. Unaffected object definitions,
+including pad/net assignments, must match. This is not a signal-integrity proof.
+A successful edit checkpoints the exact source, checks for stale bytes before commit,
+and atomically replaces the board. External writers do not participate in the server's
+queue: keep the editor saved and idle while the operation runs. Reload afterward;
+never save a stale editor over the changed file. On a stale hash, inspect again rather
+than blindly retrying. On success, retrying the removed UUID is intentionally an error.
+Use `restore_checkpoint` with the returned checkpoint ID for rollback.
+
+After installing a rebuilt server, restart/reconnect the MCP client and refresh its
+catalog before using these tools. They do not change the schematic or invoke routing.

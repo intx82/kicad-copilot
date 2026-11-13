@@ -11,7 +11,30 @@ import { join } from 'node:path';
 
 const PCB_DOC_PATH = join(DOCS_DIR, 'pcb-layout', 'instructions.md');
 
+import { deletePcbTracks, getPcbTracks } from '../../pcb/track-edit';
+
 export function registerPcbTools(server: McpServer) {
+    server.registerTool('get_pcb_tracks', {
+        title: 'Get PCB Tracks',
+        description: 'List straight track UUIDs, geometry, nets, lock state and source hash.',
+        inputSchema: z.object({ path: z.string().min(1) }),
+        annotations: { readOnlyHint: true },
+    }, async ({ path }) => runTool(() => getPcbTracks(path)));
+
+    server.registerTool('delete_pcb_tracks', {
+        title: 'Delete PCB Tracks',
+        description: `Delete exact unlocked, ungrouped straight segments transactionally after native DRC. Instructions: ${PCB_DOC_PATH}`,
+        annotations: { destructiveHint: true, readOnlyHint: false, idempotentHint: false },
+        inputSchema: z.object({
+            path: z.string().min(1),
+            uuids: z.array(z.string().uuid()).min(1).max(100),
+            dry_run: z.boolean().default(false),
+            expected_source_hash: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+        }),
+    }, async (input) => runTool(() => enqueueMutation(() => deletePcbTracks(
+        input.path, input.uuids, input.dry_run, input.expected_source_hash,
+    ))));
+
     server.registerTool(
         'import_pcb_changes',
         {

@@ -36,6 +36,8 @@
     "test:routing-live": "npm run build && node dist/test-routing-live.js",
     "test:routing-integration": "npm run build && node dist/test-routing-integration.js",
     "test:analysis": "npm run build && node dist/test-analysis.js",
+    "test:pcb-track-edit": "npm run build && node dist/test-pcb-track-edit.js",
+    "test:schematic-edit": "npm run build && node dist/test-schematic-edit.js",
     "check": "npm run typecheck && npm run build",
     "prepack": "npm run build",
     "start": "node dist/index.js"

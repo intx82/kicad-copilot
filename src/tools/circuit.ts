@@ -10,7 +10,10 @@ import { enqueueMutation } from '../utils/mutation-queue';
 import { postJson } from '../utils/server';
 import { runTool, textResult } from '../utils/tool-result';
 
+import { registerSchematicEditTools } from './schematic-edit';
+
 export function registerCircuitTools(server: McpServer) {
+    registerSchematicEditTools(server);
     server.registerTool(
         'component_search',
         {

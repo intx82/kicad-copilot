@@ -272,3 +272,21 @@ The repository also contains focused schematic, PCB, and routing test scripts fo
 ## License
 
 MIT
+
+### Targeted track cleanup
+
+`get_pcb_tracks({ path })` lists straight-segment UUIDs and a source hash.
+`delete_pcb_tracks({ path, uuids, expected_source_hash, dry_run })` removes only
+explicit unlocked, ungrouped straight segments after baseline/candidate native DRC.
+New errors or unconnected findings reject the batch. Existing warnings are reported.
+Successful changes are checkpointed; save editor edits first and reload afterward.
+See [the targeted deletion workflow](docs/pcb-layout/instructions.md#targeted-straight-track-deletion).
+Rebuild and reconnect the MCP client to discover the new tools. Run
+`npm run test:pcb-track-edit` for unit and mocked-CLI transaction coverage; this
+suite does not replace real KiCad integration validation.
+
+### Precise schematic edits
+
+`get_schematic_geometry` reads exact item UUIDs, geometry and a source hash. `edit_schematic` assigns footprints in place, positions/rotates existing symbols, and adds orthogonal wires/junctions or removes exact drawing items in a single connectivity-preserving transaction. It preserves component identity, checkpoints committed edits, checks native pin-net memberships and rejects added ERC findings. Moves do not drag wires: submit replacement wiring in the same batch. Use `dry_run` first, then reload external changes in KiCad. See [in-place editing](docs/schematic/in-place-editing.md) for schemas, validation limits and hierarchy requirements.
+
+After upgrading/rebuilding, restart the MCP server and refresh the client's tool catalog to discover these tools. Rebuilding does not add tools to an already running server.

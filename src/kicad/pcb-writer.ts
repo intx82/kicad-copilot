@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { listHead, parseSExpression, printSExpression, SExpression } from './sexpr/ast';
 
 export function sourceHash(source: string | Buffer) {
@@ -27,10 +27,11 @@ export async function atomicWritePcb(path: string, expectedSource: string, root:
     if (sourceHash(current) !== sourceHash(expectedSource)) throw new Error('file changed during operation');
     const candidate = serializePcb(root);
     parsePcbSource(candidate);
-    const temporary = `${dirname(target)}\\.${basename(target)}.${randomUUID()}.tmp`;
+    const temporary = join(dirname(target), `.${basename(target)}.${randomUUID()}.tmp`);
     await mkdir(dirname(target), { recursive: true });
     try {
         await writeFile(temporary, candidate, { encoding: 'utf8', flag: 'wx' });
+        if (await fileHash(target) !== sourceHash(expectedSource)) throw new Error('file changed during operation');
         await rename(temporary, target);
     } finally {
         await rm(temporary, { force: true });
