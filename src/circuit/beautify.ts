@@ -3,7 +3,7 @@ import { applyCircuitAssembly } from '../kicad/assembly';
 import { getSchematic, getSchematicContext } from '../kicad/schematic-reader';
 import { CircuitAssembly, CircuitMod, ExplainCircuit } from '../types/circuit';
 import { createDiagnosticCollector, errorWithDiagnostics } from '../utils/diagnostics';
-import { postJson } from '../utils/server';
+import { assembleCircuit } from './local-assembly';
 import { targetCircuitAssembly } from './target-assembly';
 
 export type SchematicBlocks = Record<string, string[]>;
@@ -76,10 +76,7 @@ export async function beautifySchematic(path: string, blocks: SchematicBlocks) {
     };
     const serverInputCircuit = withoutSelectedComponents(projectCircuit, selected);
     const checkpointId = await saveCheckpoint(path, 'Before beautify_schematic');
-    const response = await postJson('/v1/mcp-tools/extract-circuit', {
-        circuit,
-        inputCircuit: serverInputCircuit,
-    });
+    const response = await assembleCircuit(circuit, serverInputCircuit, path);
     const assembly = targetCircuitAssembly(
         serverAssembly(response),
         inputCircuit,

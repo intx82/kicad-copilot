@@ -1,3 +1,4 @@
+import { findLocalComponents } from './local-library';
 import { access, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { getSupportedKicadCli } from '../kicad/cli';
@@ -24,6 +25,8 @@ async function loadPowerLibrary() {
 }
 
 export async function getPowerSymbol(name: string) {
+    const [local] = await findLocalComponents(`power:${name}`);
+    if (local) return local.symbol;
     powerLibrary ??= loadPowerLibrary();
     const root = await powerLibrary;
     const symbol = root.find((item): item is SExpression[] =>

@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp';
 import * as z from 'zod/v4';
+import { searchComponent } from '../components/search';
 import { beautifySchematic } from '../circuit/beautify';
 import { extractCircuit } from '../circuit/extract';
 import { CircuitModStruct } from '../types/circuit';
@@ -14,18 +15,19 @@ export function registerCircuitTools(server: McpServer) {
         'component_search',
         {
             title: 'Search Component',
-            description: 'Search a component by exact part_uuid or MPN.',
+            description: 'Search installed KiCad symbols first by exact MPN or Library:Symbol, then the remote catalog on a miss. Local IDs are kicad:Library:Symbol.',
             inputSchema: z.object({
                 part_uuid: z.string().nullable().optional(),
                 MPN: z.string().nullable().optional(),
+                path: z.string().optional().describe('Schematic path for project sym-lib-table lookup.'),
             }),
         },
-        async ({ part_uuid, MPN }) => {
+        async ({ part_uuid, MPN, path }) => {
             if (!part_uuid && !MPN) {
                 return textResult('Fill one: part_uuid or MPN');
             }
 
-            return runTool(() => postJson('/v1/mcp-tools/component-search', { part_uuid, MPN }));
+            return runTool(() => searchComponent({ part_uuid, MPN, path }));
         },
     );
 

@@ -842,6 +842,7 @@ async function preparedRealAssets(
     assembly: CircuitAssembly,
     input: ExplainCircuit,
     report: DiagnosticReporter,
+    projectPath: string,
 ) {
     const uuids = [...new Set([
         ...assembly.components
@@ -855,7 +856,7 @@ async function preparedRealAssets(
     ])];
     const entries = await Promise.all(uuids.map(async (partUuid) => {
         try {
-            return [partUuid, await convertComponent(partUuid)] as const;
+            return [partUuid, await convertComponent(partUuid, projectPath)] as const;
         } catch (error) {
             const designators = [...assembly.components, ...input.components]
                 .filter((component) => component.part_uuid === partUuid)
@@ -891,7 +892,7 @@ export async function applyCircuitAssembly(
         throw new Error('invalid CircuitAssembly response');
     }
 
-    const realAssets = await preparedRealAssets(assembly, input, report);
+    const realAssets = await preparedRealAssets(assembly, input, report, path);
     const fallbackSignals = assembly.components.flatMap((component) => component.pins
         .map((pin) => pin.signal_name.trim())
         .filter((signal) => signal && signal.toUpperCase() !== 'NC'));
@@ -1073,7 +1074,7 @@ export async function applyCircuitAssembly(
         }
         for (const [partUuid, asset] of realAssets) {
             try {
-                const normalized = normalizedComponentSymbol(
+                const normalized = asset.source === 'local' ? asset.symbol : normalizedComponentSymbol(
                     asset.symbol,
                     representativeDesignators.get(partUuid) || 'U',
                     'kicad-copilot',

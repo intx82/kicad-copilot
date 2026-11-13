@@ -11,6 +11,7 @@ import { runProcessChecked } from '../utils/process';
 import { componentCacheDirectory, readCacheJson, writeCacheJson } from './cache';
 import { getEasyEda2Kicad } from './easyeda2kicad';
 import { resolvePartUuid } from './resolver';
+import { isLocalPart, loadLocalComponent } from './local-library';
 
 type ConversionMetadata = {
     part_uuid: string;
@@ -20,6 +21,7 @@ type ConversionMetadata = {
 };
 
 export type ConvertedComponent = ConversionMetadata & {
+    source?: 'local';
     symbol: SExpression[];
     properties: Record<string, string>;
 };
@@ -94,7 +96,8 @@ async function convert(partUuid: string) {
     } satisfies ConvertedComponent;
 }
 
-export function convertComponent(partUuid: string) {
+export function convertComponent(partUuid: string, projectPath?: string): Promise<ConvertedComponent> {
+    if (isLocalPart(partUuid)) return loadLocalComponent(partUuid, projectPath);
     let pending = inflight.get(partUuid);
     if (!pending) {
         pending = convert(partUuid).finally(() => {

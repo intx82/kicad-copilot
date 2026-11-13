@@ -17,6 +17,7 @@ import { componentCacheDirectory } from './cache';
 const LIBRARY_NAME = 'kicad-copilot';
 
 export function projectFootprintId(asset: ConvertedComponent) {
+    if (asset.source === 'local') return asset.properties.Footprint || '';
     const footprint = asset.properties.Footprint || '';
     const name = footprint.includes(':') ? footprint.slice(footprint.indexOf(':') + 1) : footprint;
     return name ? `${LIBRARY_NAME}:${asset.product_code}_${name}` : '';
@@ -90,6 +91,7 @@ async function copyFootprints(directory: string, assets: Iterable<ConvertedCompo
     await Promise.all([mkdir(footprintDirectory, { recursive: true }), mkdir(modelDirectory, { recursive: true })]);
 
     for (const asset of assets) {
+        if (asset.source === 'local') continue;
         const cacheDirectory = componentCacheDirectory(asset.part_uuid);
         const sourceFootprints = join(cacheDirectory, 'component.pretty');
         const sourceModels = join(cacheDirectory, 'component.3dshapes');

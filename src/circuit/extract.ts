@@ -3,7 +3,7 @@ import { applyCircuitAssembly } from '../kicad/assembly';
 import { getSchematic, getSchematicContext } from '../kicad/schematic-reader';
 import { CircuitAssembly, CircuitMod, ExplainCircuit } from '../types/circuit';
 import { createDiagnosticCollector, errorWithDiagnostics } from '../utils/diagnostics';
-import { postJson } from '../utils/server';
+import { assembleCircuit } from './local-assembly';
 import { targetCircuitAssembly } from './target-assembly';
 
 type ExtractCircuitOptions = {
@@ -71,10 +71,7 @@ export async function extractCircuit(
     const { target: inputCircuit, project: projectCircuit } = await getSchematicContext(path);
     if (!hasRequestedChanges(circuit)) throw new Error('no circuit changes requested');
     const checkpointId = await saveCheckpoint(path, 'Before extract_circuit');
-    const response = await postJson('/v1/mcp-tools/extract-circuit', {
-        circuit,
-        inputCircuit: projectCircuit,
-    });
+    const response = await assembleCircuit(circuit, projectCircuit, path);
     const record = typeof response === 'object' && response !== null
         ? response as Record<string, unknown>
         : undefined;
